@@ -1,0 +1,123 @@
+---
+- name: Uninstall the package
+  shell: rpm -e amazon-cloudwatch-agent
+  become: true
+  ignore_errors: yes
+
+- name: Delete the packages
+  command: rm -rf "{{ item }}" 
+  args: 
+    chdir: /tmp/
+  with_items: 
+    - awscli-bundle.zip
+    - awscli-bundle
+    - amazon-cloudwatch-agent.rpm
+  ignore_errors: yes
+
+- name: Transfer the package to the target node
+  copy:
+    src: amazon-cloudwatch-agent.rpm
+    dest: /tmp/amazon-cloudwatch-agent.rpm
+  become: true
+
+- name: Install the package 
+  command: rpm -ivh amazon-cloudwatch-agent.rpm
+  args: 
+    chdir: /tmp/
+  become: true
+
+- name: Transfer the AWS-CLI bundle on the target node
+  copy: 
+    src: awscli-bundle.zip 
+    dest: /tmp/awscli-bundle.zip
+  become: true
+
+- name: Unzip AWS-CLI bundle
+  command: unzip awscli-bundle.zip 
+  args: 
+    chdir: /tmp/
+  become: true
+
+- name: Change the directory and Install the AWS-CLI bundle
+  command: ./install
+  args:
+    chdir: /tmp/awscli-bundle
+  become: true
+ 
+- name: Check the aws-cli bundle
+  shell: /root/.local/lib/aws/bin/aws --version
+  register: version
+
+- name: Print the version
+  debug: 
+    msg: "{{ version }}" 
+
+- name: Transfer the file to target node
+  copy:
+    src: aws_file
+    dest: /root/.aws
+  become: true
+
+- name: Edit the file
+  lineinfile:
+    path: '/opt/aws/amazon-cloudwatch-agent/etc/common-config.toml'
+    line: "{{ item }}"
+    regexp: "{{ item }}"
+  with_items:
+    - 'no_proxy = "169.254.169.254"'
+  become: true
+
+- name: Transfer the file to target node
+  copy:
+    src: config_staging
+    dest: /opt/aws/amazon-cloudwatch-agent/bin/config.json
+    force: yes
+  become: true
+
+- name: Change the directory and execute the command 
+  command: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:./config.json -s
+  args: 
+    chdir: /opt/aws/amazon-cloudwatch-agent/bin/
+  become: true
+
+- name: Gather facts about the avaiablity zone of the instance
+  shell: curl 169.254.169.254/latest/meta-data/placement/availability-zone/
+  register: out
+
+- name: Edit the hosts file if AZa
+  lineinfile:
+    path: '/etc/hosts'
+    line: "{{ item }}"
+    regexp: "{{ item }}"
+  with_items:
+    - '10.204.27.21 logs.eu-west-1.amazonaws.com'  
+  become: true
+  when: out.stdout == "eu-west-1a"
+
+- name: Edit the hosts file if AZb
+  lineinfile:
+    path: '/etc/hosts'
+    line: "{{ item }}"
+    regexp: "{{ item }}"
+  with_items:
+    - '10.204.29.204 logs.eu-west-1.amazonaws.com'
+  become: true
+  when: out.stdout == "eu-west-1b"
+
+- name: Edit the hosts file if AZc
+  lineinfile:
+    path: '/etc/hosts'
+    line: "{{ item }}"
+    regexp: "{{ item }}"
+  with_items:
+    - '10.204.30.113 logs.eu-west-1.amazonaws.com'
+  become: true
+  when: out.stdout == "eu-west-1c"
+
+- name: Check the status with the below command for the agent
+  shell: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status
+  register: cloudwatch_status
+
+- name: Print the status of cloudwatch
+  debug:
+    msg: "{{ cloudwatch_status }}"

@@ -1,0 +1,2 @@
+[profile AmazonCloudWatchAgent]
+region = eu-west-1

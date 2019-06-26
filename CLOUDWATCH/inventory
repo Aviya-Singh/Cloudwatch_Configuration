@@ -1,0 +1,7 @@
+[linux]
+
+
+[linux:vars]
+ansible_connection=ssh
+ansible_user=
+ansible_become=true

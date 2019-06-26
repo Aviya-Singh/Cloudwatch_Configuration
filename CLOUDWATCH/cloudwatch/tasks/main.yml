@@ -1,0 +1,17 @@
+---
+# tasks file for cloudwatch
+
+- include: shared_service.yml
+  tags: shared
+
+- include: production.yml
+  tags: prod
+ 
+- include: test.yml
+  tags: test
+
+- include: staging.yml
+  tags: stage
+
+- include: development.yml
+  tags: dev

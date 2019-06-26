@@ -1,0 +1,6 @@
+---
+- name: Cloudwatch configuration
+  hosts: linux
+  connection: local
+  roles: 
+    - cloudwatch

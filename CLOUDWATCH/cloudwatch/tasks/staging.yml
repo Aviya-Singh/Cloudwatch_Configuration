@@ -64,7 +64,7 @@
     line: "{{ item }}"
     regexp: "{{ item }}"
   with_items:
-    - 'no_proxy = "169.254.169.254"'
+    - 'no_proxy = "<ip>"'
   become: true
 
 - name: Transfer the file to target node
@@ -81,7 +81,7 @@
   become: true
 
 - name: Gather facts about the avaiablity zone of the instance
-  shell: curl 169.254.169.254/latest/meta-data/placement/availability-zone/
+  shell: curl <ip>/latest/meta-data/placement/availability-zone/
   register: out
 
 - name: Edit the hosts file if AZa
@@ -90,7 +90,7 @@
     line: "{{ item }}"
     regexp: "{{ item }}"
   with_items:
-    - '10.204.27.21 logs.eu-west-1.amazonaws.com'  
+    - '<ip> logs.eu-west-1.amazonaws.com'  
   become: true
   when: out.stdout == "eu-west-1a"
 
@@ -100,7 +100,7 @@
     line: "{{ item }}"
     regexp: "{{ item }}"
   with_items:
-    - '10.204.29.204 logs.eu-west-1.amazonaws.com'
+    - '<ip> logs.eu-west-1.amazonaws.com'
   become: true
   when: out.stdout == "eu-west-1b"
 
@@ -110,7 +110,7 @@
     line: "{{ item }}"
     regexp: "{{ item }}"
   with_items:
-    - '10.204.30.113 logs.eu-west-1.amazonaws.com'
+    - '<ip> logs.eu-west-1.amazonaws.com'
   become: true
   when: out.stdout == "eu-west-1c"
 

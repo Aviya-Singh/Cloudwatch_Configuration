@@ -1,2 +1,2 @@
 # Cloudwatch_Configuration
-Cloudwatch configuration on AWS Linux servers 
+Ansible role to perform Cloudwatch configuration on AWS Linux servers.
